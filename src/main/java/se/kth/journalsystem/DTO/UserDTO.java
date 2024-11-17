@@ -4,11 +4,16 @@ public class UserDTO {
     private Long id;
     private String username;
     private String password; // Nytt fält för lösenord
-    private String role;
-    private Long patientId;
-    private Long practitionerId;
+    private String role; // Roll (PATIENT, DOCTOR, STAFF)
+    private Long patientId; // Patient ID, om rollen är PATIENT
+    private Long practitionerId; // Practitioner ID, om rollen är PRACTITIONER/STAFF
 
-    // Getters och setters
+    // Patient-specifika fält
+    private String patientName; // Namn på patient
+    private String patientBirthDate; // Födelsedatum för patienten
+    private String patientContactInfo; // Kontaktinformation för patienten
+
+    // Getters och Setters
     public Long getId() {
         return id;
     }
@@ -56,4 +61,29 @@ public class UserDTO {
     public void setPractitionerId(Long practitionerId) {
         this.practitionerId = practitionerId;
     }
+
+    public String getPatientName() {
+        return patientName;
+    }
+
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
+    }
+
+    public String getPatientBirthDate() {
+        return patientBirthDate;
+    }
+
+    public void setPatientBirthDate(String patientBirthDate) {
+        this.patientBirthDate = patientBirthDate;
+    }
+
+    public String getPatientContactInfo() {
+        return patientContactInfo;
+    }
+
+    public void setPatientContactInfo(String patientContactInfo) {
+        this.patientContactInfo = patientContactInfo;
+    }
 }
+

@@ -3,7 +3,9 @@ package se.kth.journalsystem.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import se.kth.journalsystem.DTO.UserDTO;
+import se.kth.journalsystem.model.Patient;
 import se.kth.journalsystem.model.User;
+import se.kth.journalsystem.repository.PatientRepository;
 import se.kth.journalsystem.repository.UserRepository;
 
 import java.security.MessageDigest;
@@ -16,10 +18,12 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PatientRepository patientRepository) {
         this.userRepository = userRepository;
+        this.patientRepository = patientRepository;
     }
 
     // Hasha lösenord med SHA-256
@@ -53,11 +57,28 @@ public class UserService {
 
     // Registrera ny användare
     public UserDTO createUser(UserDTO userDTO) {
-        User user = convertFromDTO(userDTO);
+        User user = new User();
+        user.setUsername(userDTO.getUsername());
+        user.setRole(userDTO.getRole());
 
         // Hasha lösenordet innan det sparas
         String hashedPassword = hashPassword(userDTO.getPassword());
         user.setPassword(hashedPassword);
+
+        // Om rollen är PATIENT, skapa en ny patient och koppla den till användaren
+        if ("PATIENT".equalsIgnoreCase(userDTO.getRole())) {
+            Patient patient = new Patient();
+            patient.setName(userDTO.getUsername()); // Använd username som default name
+            patient.setBirthDate(userDTO.getPatientBirthDate());
+            patient.setContactInfo(userDTO.getPatientContactInfo());
+
+            Patient savedPatient = patientRepository.save(patient);
+            System.out.println("Saved Patient: " + savedPatient.getId());
+
+
+            // Koppla patient till användaren
+            user.setPatient(savedPatient);
+        }
 
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
@@ -107,15 +128,4 @@ public class UserService {
         dto.setPractitionerId(user.getPractitioner() != null ? user.getPractitioner().getId() : null);
         return dto;
     }
-
-
-    private User convertFromDTO(UserDTO dto) {
-        User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setRole(dto.getRole());
-        // Låt lösenordet hanteras av createUser eller uppdateringslogiken
-        user.setPassword(dto.getPassword());
-        return user;
-    }
-
 }
