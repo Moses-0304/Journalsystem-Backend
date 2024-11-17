@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql:8.0
+    container_name: journalsystem_db1
+    environment:
+      MYSQL_ROOT_PASSWORD: 4321Moses
+      MYSQL_DATABASE: JournalSystemConnection
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build: .
+    container_name: journalsystem_backend1
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://journalsystem_db1:3306/JournalSystemConnection
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 4321Moses
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+
+volumes:
+  db_data:
