@@ -102,17 +102,20 @@ public class UserService {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setRole(user.getRole());
+        dto.setPassword(user.getPassword()); // Lägg till detta enbart om det behövs för inloggning
         dto.setPatientId(user.getPatient() != null ? user.getPatient().getId() : null);
         dto.setPractitionerId(user.getPractitioner() != null ? user.getPractitioner().getId() : null);
-        // Lösenord inkluderas INTE i DTO
         return dto;
     }
+
 
     private User convertFromDTO(UserDTO dto) {
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setRole(dto.getRole());
-        user.setPassword(hashPassword(dto.getPassword()));
+        // Låt lösenordet hanteras av createUser eller uppdateringslogiken
+        user.setPassword(dto.getPassword());
         return user;
     }
+
 }
