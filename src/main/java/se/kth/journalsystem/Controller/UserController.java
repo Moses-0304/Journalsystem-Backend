@@ -6,8 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import se.kth.journalsystem.DTO.UserDTO;
 import se.kth.journalsystem.Service.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -50,6 +54,10 @@ public class UserController {
         if (existingUser == null || !userService.checkPassword(userDTO.getPassword(), existingUser.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Fel användarnamn eller lösenord");
         }
-        return ResponseEntity.ok("Inloggning lyckades! Roll: " + existingUser.getRole());
+
+        // Return a simple string message with the role
+        String response = "Inloggning lyckades! Roll: " + existingUser.getRole();
+        return ResponseEntity.ok(response);
     }
+
 }
