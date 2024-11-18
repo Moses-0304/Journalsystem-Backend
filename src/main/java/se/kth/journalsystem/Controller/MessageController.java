@@ -45,6 +45,12 @@ public class MessageController {
         return messageService.getMessagesByReceiverId(receiverId);
     }
 
+    // Get all messages between two users
+    @GetMapping("/conversation")
+    public List<MessageDTO> getMessagesBetweenUsers(@RequestParam Long user1, @RequestParam Long user2) {
+        return messageService.getMessagesBetweenUsers(user1, user2);
+    }
+
     // Create a new message
     @PostMapping
     public ResponseEntity<MessageDTO> createMessage(@RequestBody MessageDTO messageDTO) {

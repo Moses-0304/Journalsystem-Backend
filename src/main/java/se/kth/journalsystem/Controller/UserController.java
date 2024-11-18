@@ -60,4 +60,14 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    // Hämta en användare baserat på användarnamn
+    @GetMapping("/username/{username}")
+    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
+        UserDTO userDTO = userService.getUserByUsername(username);
+        if (userDTO == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        return ResponseEntity.ok(userDTO);
+    }
+
 }

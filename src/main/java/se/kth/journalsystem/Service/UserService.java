@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import se.kth.journalsystem.DTO.UserDTO;
 import se.kth.journalsystem.model.Patient;
+import se.kth.journalsystem.model.Practitioner;
 import se.kth.journalsystem.model.User;
 import se.kth.journalsystem.repository.PatientRepository;
+import se.kth.journalsystem.repository.PractitionerRepository;
 import se.kth.journalsystem.repository.UserRepository;
 
 import java.security.MessageDigest;
@@ -19,11 +21,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
-
+    private final PractitionerRepository practitionerRepository;
     @Autowired
-    public UserService(UserRepository userRepository, PatientRepository patientRepository) {
+    public UserService(UserRepository userRepository, PatientRepository patientRepository, PractitionerRepository practitionerRepository) {
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
+        this.practitionerRepository = practitionerRepository;
     }
 
     // Hasha lösenord med SHA-256
@@ -68,21 +71,39 @@ public class UserService {
         // Om rollen är PATIENT, skapa en ny patient och koppla den till användaren
         if ("PATIENT".equalsIgnoreCase(userDTO.getRole())) {
             Patient patient = new Patient();
-            patient.setName(userDTO.getUsername()); // Använd username som default name
+            patient.setName(userDTO.getPatientName() != null ? userDTO.getPatientName() : userDTO.getUsername());
             patient.setBirthDate(userDTO.getPatientBirthDate());
             patient.setContactInfo(userDTO.getPatientContactInfo());
 
+            // Logga värden för felsökning
+            System.out.println("Skapar Patient med:");
+            System.out.println("Namn: " + patient.getName());
+            System.out.println("Födelsedatum: " + patient.getBirthDate());
+            System.out.println("Kontaktinfo: " + patient.getContactInfo());
+
             Patient savedPatient = patientRepository.save(patient);
-            System.out.println("Saved Patient: " + savedPatient.getId());
-
-
-            // Koppla patient till användaren
             user.setPatient(savedPatient);
+        }
+
+        // Om rollen är DOCTOR eller STAFF, skapa en ny practitioner och koppla den till användaren
+        if ("DOCTOR".equalsIgnoreCase(userDTO.getRole()) || "STAFF".equalsIgnoreCase(userDTO.getRole())) {
+            Practitioner practitioner = new Practitioner();
+            practitioner.setName(userDTO.getUsername()); // Använd username som default namn
+            practitioner.setRole(userDTO.getRole()); // Spara rollen (DOCTOR/STAFF)
+
+            // Logga värden för felsökning
+            System.out.println("Skapar Practitioner med:");
+            System.out.println("Namn: " + practitioner.getName());
+            System.out.println("Roll: " + practitioner.getRole());
+
+            Practitioner savedPractitioner = practitionerRepository.save(practitioner);
+            user.setPractitioner(savedPractitioner);
         }
 
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
     }
+
 
     // Kontrollera lösenord vid inloggning
     public boolean checkPassword(String rawPassword, String storedPassword) {

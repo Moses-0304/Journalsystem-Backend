@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import se.kth.journalsystem.DTO.MessageDTO;
 import se.kth.journalsystem.model.Message;
+import se.kth.journalsystem.model.User;
 import se.kth.journalsystem.repository.MessageRepository;
+import se.kth.journalsystem.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,10 +17,12 @@ import java.util.stream.Collectors;
 public class MessageService {
 
     private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public MessageService(MessageRepository messageRepository) {
+    public MessageService(MessageRepository messageRepository, UserRepository userRepository) {
         this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
     }
 
     public List<MessageDTO> getAllMessages() {
@@ -37,9 +41,33 @@ public class MessageService {
         return messageRepository.findByReceiverId(receiverId).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
+    public List<MessageDTO> getMessagesBetweenUsers(Long user1, Long user2) {
+        return messageRepository.findMessagesBetweenUsers(user1, user2)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public MessageDTO createMessage(MessageDTO messageDTO) {
-        Message message = convertFromDTO(messageDTO);
+        Message message = new Message();
+        message.setContent(messageDTO.getContent());
+        message.setRead(false); // Nytt meddelande är som standard oläst
         message.setSentDate(LocalDateTime.now());
+
+        // Hämta avsändare och mottagare från databasen baserat på ID
+        if (messageDTO.getSenderId() != null) {
+            User sender = userRepository.findById(messageDTO.getSenderId())
+                    .orElseThrow(() -> new RuntimeException("Sender not found with ID: " + messageDTO.getSenderId()));
+            message.setSender(sender);
+        }
+
+        if (messageDTO.getReceiverId() != null) {
+            User receiver = userRepository.findById(messageDTO.getReceiverId())
+                    .orElseThrow(() -> new RuntimeException("Receiver not found with ID: " + messageDTO.getReceiverId()));
+            message.setReceiver(receiver);
+        }
+
+        // Spara meddelandet
         Message savedMessage = messageRepository.save(message);
         return convertToDTO(savedMessage);
     }
@@ -52,7 +80,6 @@ public class MessageService {
         return false;
     }
 
-    // Konverteringsmetoder
     private MessageDTO convertToDTO(Message message) {
         MessageDTO dto = new MessageDTO();
         dto.setId(message.getId());
@@ -62,15 +89,5 @@ public class MessageService {
         dto.setSenderId(message.getSender() != null ? message.getSender().getId() : null);
         dto.setReceiverId(message.getReceiver() != null ? message.getReceiver().getId() : null);
         return dto;
-    }
-
-    private Message convertFromDTO(MessageDTO dto) {
-        Message message = new Message();
-        message.setContent(dto.getContent());
-        message.setRead(dto.isRead());
-        // Sätt sender och receiver baserat på externa tjänster om tillgängliga
-        // message.setSender(userService.findById(dto.getSenderId()).orElseThrow(...));
-        // message.setReceiver(userService.findById(dto.getReceiverId()).orElseThrow(...));
-        return message;
     }
 }

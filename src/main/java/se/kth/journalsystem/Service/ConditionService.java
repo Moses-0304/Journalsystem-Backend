@@ -8,6 +8,7 @@ import se.kth.journalsystem.model.Patient;
 import se.kth.journalsystem.repository.ConditionRepository;
 import se.kth.journalsystem.repository.PatientRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,6 +39,11 @@ public class ConditionService {
 
     public ConditionDTO createCondition(ConditionDTO conditionDTO) {
         Condition condition = convertFromDTO(conditionDTO);
+
+        // Kontrollera om diagnosisDate är null. Om det är null, sätt dagens datum.
+        if (condition.getDiagnosisDate() == null) {
+            condition.setDiagnosisDate(LocalDate.now());
+        }
 
         // Set the patient based on patientId
         if (conditionDTO.getPatientId() != null) {
